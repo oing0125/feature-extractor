@@ -1,5 +1,10 @@
-from FeatureExtractor import FeatureExtractor
+from FeatureExtractorByBro import FeatureExtractor
 
-dataPath = '../datas/malware/botnet-capture-20110810-neris.pcap'
-fe = FeatureExtractor(dataPath)
+print('=============================== start =============================')
+path = '/home/sdsra/Downloads/CTU-13-Dataset/benign/2017_04_30-normal'
+fe = FeatureExtractor(path)
+fe.extract_features()
+for flow in fe.connections:
+    print(flow, fe.connections[flow].get_features())
+print('================================ end ==============================')
 
