@@ -7,7 +7,6 @@ class Connection4tuple():
         # 1. basic information
         self.tuple_index = tuple_index
         self.label = ''
-        self.conn_log_dict = dict()
         self.ssl_log_list = []
         self.x509_log_list = []
         self.ssl_flow_list = []
@@ -25,85 +24,96 @@ class Connection4tuple():
         self.uid_flow_dict = dict()
         self.state_of_connection_dict = dict()
 
-
-
-
-
-
+        # x509 information
+        self.the_number_of_not_valid_cert = 0
+        self.certificate_valid_length = 0
+        self.certificate_valid_length_pow = 0
+        self.the_number_of_certificate_valid = 0
+        self.the_number_of_san_domains = 0
+        self.the_number_of_san_domains_index = 0
+        self.certificate_key_length_dict = dict()
+        self.certificate_serial_dict = dict()
+        self.cert_percent_validity = list()
+        self.san_x509_list = list()
+        self.subject_x509_list = list()
+        self.issuer_x509_list = list()
+        self.cert_exponent_x509_list = list()
+        self.is_CN_in_SAN_list = list()
+        self.is_SNI_in_san_dns = list()
 
 # ==========================================================
 
-        # 3. statistical feature
-        # 3.1) duration
-        self.mean_of_duration = 0
-        self.sd_range_of_duration = 0
-        self.flow_which_has_duration_number = 0
-        self.datsets_names_list = []
-
-        # 3.2) Connection Features
-        self.number_of_ssl_flows = 0
-        self.number_of_not_ssl_flows = 0
-        self.number_of_ssl_logs = 0
-
-        # 3.3) flow_log features
-        self.the_number_of_inbound_packets = 0
-        self.inbound_packets = 0
-        self.inbound_ip_packets = 0
-        self.the_number_of_outbound_packets = 0
-        self.outbound_packets = 0
-        self.outbound_ip_packets = 0
-
-        # 3.4) ssl_log
-        self.version_of_ssl_dict = dict()
-        self.version_of_ssl_cipher_dict = dict()
-        self.certificate_path = dict()
-        self.ssl_uids_list = []
-        self.ssl_with_SNI = 0
-        self.self_signed_cert = 0
-        self.SNI_equal_DstIP = 0
-        self.SNI_list = []
-        self.subject_ssl_list = []
-        self.issuer_ssl_list = []
-        self.top_level_domain_error = 0
-        self.certificate_path_error = 0
-        self.missing_cert_in_cert_path = 0
-        self.ssl_with_certificate = 0
-        self.ssl_without_certificate = 0
-
-        # 3.5) X509 features
-        self.certificate_key_type_dict = dict()
-        self.certificate_key_length_dict = dict()
-        self.certificate_serial_dict = dict()
-        self.certificate_valid_length = 0
-        self.certificate_valid_length_pow = 0
-        self.certificate_valid_number = 0
-        self.not_valid_certificate_number = 0
-        self.number_san_domains = 0
-        self.number_san_domains_index = 0
-        self.cert_percent_validity = []
-        self.is_CN_in_SAN_list = []
-        self.is_SNI_in_san_dns = []
-        self.subject_x509_list = []
-        self.issuer_x509_list = []
-        self.san_x509_list = []
-        self.certificate_exponent = 0
-        self.temp_list = []
-        self.founded_root_certificate = 0
-        self.not_founded_root_certificate = 0
-
-        # 3.6) Compare SSL and x509 features
-        self.subject_diff = 0
-        self.issuer_diff = 0
-        self.SNI_is_in_CN = 0
+        # # 3. statistical feature
+        # # 3.1) duration
+        # self.mean_of_duration = 0
+        # self.sd_range_of_duration = 0
+        # self.flow_which_has_duration_number = 0
+        # self.datsets_names_list = []
+        #
+        # # 3.2) Connection Features
+        # self.number_of_ssl_flows = 0
+        # self.number_of_not_ssl_flows = 0
+        # self.number_of_ssl_logs = 0
+        #
+        # # 3.3) flow_log features
+        # self.the_number_of_inbound_packets = 0
+        # self.inbound_packets = 0
+        # self.inbound_ip_packets = 0
+        # self.the_number_of_outbound_packets = 0
+        # self.outbound_packets = 0
+        # self.outbound_ip_packets = 0
+        #
+        # # 3.4) ssl_log
+        # self.version_of_ssl_dict = dict()
+        # self.version_of_ssl_cipher_dict = dict()
+        # self.certificate_path = dict()
+        # self.ssl_uids_list = []
+        # self.ssl_with_SNI = 0
+        # self.self_signed_cert = 0
+        # self.SNI_equal_DstIP = 0
+        # self.SNI_list = []
+        # self.subject_ssl_list = []
+        # self.issuer_ssl_list = []
+        # self.top_level_domain_error = 0
+        # self.certificate_path_error = 0
+        # self.missing_cert_in_cert_path = 0
+        # self.ssl_with_certificate = 0
+        # self.ssl_without_certificate = 0
+        #
+        # # 3.5) X509 features
+        # self.certificate_key_type_dict = dict()
+        # self.certificate_key_length_dict = dict()
+        # self.certificate_serial_dict = dict()
+        # self.certificate_valid_length = 0
+        # self.certificate_valid_length_pow = 0
+        # self.certificate_valid_number = 0
+        # self.not_valid_certificate_number = 0
+        # self.number_san_domains = 0
+        # self.number_san_domains_index = 0
+        # self.cert_percent_validity = []
+        # self.is_CN_in_SAN_list = []
+        # self.is_SNI_in_san_dns = []
+        # self.subject_x509_list = []
+        # self.issuer_x509_list = []
+        # self.san_x509_list = []
+        # self.certificate_exponent = 0
+        # self.temp_list = []
+        # self.founded_root_certificate = 0
+        # self.not_founded_root_certificate = 0
+        #
+        # # 3.6) Compare SSL and x509 features
+        # self.subject_diff = 0
+        # self.issuer_diff = 0
+        # self.SNI_is_in_CN = 0
 
         # Function
         # Read top level domain file.
         # self.top_level_domain = []
         # self.read_top_level_domain_file()
 
-    def add_ssl_log(self, ssl_log):
-        self.ssl_log_list.append(ssl_log)
-        self.ssl_flow_list.append(ssl_log)
+    def add_ssl_flow(self, flow_log):
+        self.ssl_flow_list.append(flow_log)
+        self.add_flow.append(flow_log)
 
     def add_not_ssl_flow(self, flow_log):
         self.not_ssl_flow_list.append(flow_log)
@@ -111,7 +121,6 @@ class Connection4tuple():
 
     def add_flow(self, flow_log):
         uid = flow_log['uid']
-        self.conn_log_dict[uid] = flow_log.to_dict()
         state = flow_log['conn_state']
         duration = flow_log['duration']
         orig_bytes = flow_log['orig_bytes']
@@ -139,39 +148,92 @@ class Connection4tuple():
         self.resp_packets += int(resp_pkts)
         self.orig_packets += int(orig_pkts)
 
+    def add_ssl_log(self, ssl_log, x509_log):
+        self.add_x509_log(x509_log)
+        self.is_SNI_in_cert(ssl_log, x509_log)
+        self.compare_ssl_and_x509(ssl_log, x509_log)
 
-    def add_x509_log(self, ssl_log, x509_logs):
+    def add_x509_log(self, x509_log):
+        ts = x509_log['ts']
+        not_valid_before = x509_log['certificate.not_valid_before']
+        not_valid_after = x509_log['certificate.not_valid_after']
+        CN_part = x509_log['certificate.subject']
+        cert_serial = x509_log['certificate.serial']
+        cert_key_length = x509_log['certificate.key_length']
+        cert_issuer = x509_log['certificate.issuer']
+        cert_exponent = x509_log['certificate.exponent']
 
+        self.x509_log_list.append(x509_log)
+        self.subject_x509_list.append(CN_part)
+
+        # is SNI in san dns
+        if x509_log['san.dns'] != '-':
+            SAN_dns_list = x509_log['san.dns']
+            SAN_dns_list = list(lambda x: x.replace('*', ''), SAN_dns_list)
+            hit_2 = 0
+            for san_dns in SAN_dns_list:
+                if san_dns in CN_part:
+                    hit_2 = 1
+                    break
+            self.is_CN_in_SAN_list.append(hit_2)
+
+
+        if not_valid_after != '-' and not_valid_before != '-':
+            if ts > not_valid_after or ts < not_valid_before:
+                self.the_number_of_not_valid_cert += 1
+            norm_after = not_valid_after - not_valid_before
+            current_time_norm = ts - not_valid_before
+            self.cert_percent_validity.append(current_time_norm / norm_after)
+
+        if cert_serial not in self.certificate_serial_dict:
+            self.certificate_serial_dict[cert_serial] = 1
+
+            if cert_key_length != '-':
+                if cert_key_length in self.certificate_key_length_dict:
+                    self.certificate_key_length_dict[cert_key_length] += 1
+                else:
+                    self.certificate_key_length_dict[cert_key_length] = 1
+
+            if not_valid_after != '-' and not_valid_before != '-':
+                valid_length_sec = float(not_valid_after) - float(not_valid_before)
+                valid_length_days_not_round = int((valid_length_sec / (3600.0 * 24.0)))
+                valid_length_days = round(valid_length_days_not_round, 2)
+                self.certificate_valid_length += valid_length_days
+                self.certificate_valid_length_pow += pow(valid_length_days, 2)
+                self.the_number_of_certificate_valid += 1
+
+            if x509_log['san.dns'] != '-':
+                san_dns_list = x509_log['san.dns'].split(',')
+                self.the_number_of_san_domains += len(san_dns_list)
+                self.the_number_of_san_domains_index += 1
+                self.san_x509_list.append(x509_log['san.dns'])
+
+            if CN_part != '-':
+                self.subject_x509_list.append(CN_part)
+
+            if cert_issuer != '-':
+                self.issuer_x509_list.append(cert_issuer)
+
+            if cert_exponent != '':
+                self.cert_exponent_x509_list.append(cert_exponent)
+        else:
+            self.certificate_serial_dict[cert_serial] += 1
+
+    def is_SNI_in_cert(self, ssl_log, x509_log):
         server_name = ssl_log['server_name']
-        ssl_subject = ssl_log['subject']
-        ssl_issuer = ssl_log['issuer']
-
-        for x509_log in x509_logs:
-            self.x509_log_list.append(x509_log)
-
-            # is SNI in san dns
-            SAN_dns_list = x509_log['san.dns'].split(',') if ',' in x509_log['san.dns'] else []
+        san_dns_origin = x509_log['san.dns']
+        if server_name != '-' and san_dns_origin != '-':
+            SAN_dns_list = san_dns_origin.split(',')
             hit = 0
-            for SAN_dns in SAN_dns_list:
-                if SAN_dns.replace('*','') in server_name:
+            for san_dns in SAN_dns_list:
+                if san_dns.replace('*','') in server_name:
                     hit = 1
                     break
             self.is_SNI_in_san_dns.append(hit)
 
-            # check subject
-            x509_subject = x509_log['certificate.subject'].squeeze()
-            if ssl_subject != x509_subject:
-                self.subject_diff += 1
-
-            # check issuer
-            x509_issuer = x509_log['certificate.issuer'].squeeze()
-            if ssl_issuer != x509_issuer:
-                self.issuer_diff += 1
-
-            # check server name
-            CN = x509_log['certificate.subject'].squeeze()
-            if server_name in CN:
-                self.SNI_is_in_CN += 1
+    def compare_ssl_and_x509(self, ssl_log, x509_log):
+        # TODO 0306 gogosing~
+        print('will do')
 
     def calculate_statistical_feature(self):
         # 1. Number of Flow

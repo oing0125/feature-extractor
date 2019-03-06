@@ -1,4 +1,5 @@
 from Connection4tuple import Connection4tuple
+from CertificateFeature import CertificationFeatures
 import csv
 import pandas as pd
 import numpy as np
@@ -7,8 +8,11 @@ class FeatureExtractor:
 
     # key : 4 tuple(src_ip, dst_ip, src_port, dst_port)
     connections = {}
+    # neeed to insert not_ssl conn log
     conn_dict = dict()
     ssl_dict = dict()
+    x509_dict = dict()
+    certificate_dict = dict()
 
     def __init__(self, path):
         if type(path) is str:
@@ -48,6 +52,13 @@ class FeatureExtractor:
 
     def extract_features(self):
         # TODO
+
+        # 0. load x509, create x509_dict
+        for idx, x509_log in self.x509_log_datas.iterrows():
+            x509_uid = x509_log['uid']
+            if x509_uid not in self.x509_dict:
+                self.x509_dict[x509_uid] = x509_log
+
         # 1. load ssl, insert data
         for idx, ssl_log in self.ssl_log_datas.iterrows():
             uid = ssl_log['uid']
@@ -65,14 +76,6 @@ class FeatureExtractor:
                 continue
             tuple_key = (src_ip, dst_ip, src_port, dst_port)
 
-            # 2) find ssl certs(one or more)
-            cert_chain = ssl_log['cert_chain_fuids']
-            if cert_chain == '-':
-                continue
-            cert_keys = cert_chain.split(',') if ',' in str(cert_chain) else [cert_chain]
-            x509_logs = []
-            for cert_key in cert_keys:
-                x509_logs.append(self.x509_log_datas[self.x509_log_datas['id'] == cert_key])
 
             # 3) save in connections
             connection4tuple = None
@@ -80,10 +83,31 @@ class FeatureExtractor:
                 connection4tuple = self.connections[tuple_key]
             else:
                 connection4tuple = Connection4tuple(tuple_key)
-                connection4tuple.add_ssl_flow(conn_log)
-            # connection4tuple.add_conn_log(conn_log)
-            # connection4tuple.add_ssl_log(ssl_log)
-            # connection4tuple.add_x509_log(ssl_log, x509_logs)
+            connection4tuple.add_ssl_flow(conn_log)
+
+            # TODO
+            # write ssl information
+            server_name = ssl_log['server_name']
+            cert_chain = ssl_log['cert_chain_fuids']
+            if cert_chain == '-':
+                print('[Warning]no cert chain.... what can u do?')
+                continue
+            cert_keys = cert_chain.split(',') if ',' in str(cert_chain) else [cert_chain]
+            uid_x509 = cert_keys[0]
+            x509_log = self.x509_log_datas[self.x509_log_datas['id'] == uid_x509].squeeze()
+            if uid_x509 in self.x509_dict:
+                cert_serial = x509_log['certificate.serial']
+                certificate_feature = None
+                if cert_serial in self.certificate_dict[cert_serial]:
+                    certificate_feature = self.certificate_dict[cert_serial]
+                else:
+                    certificate_feature = CertificationFeatures()
+                certificate_feature.add_server_name(server_name)
+                certificate_feature.add_x509_info(x509_log)
+
+            self.connections[uid].add_ssl_log(ssl_log, x509_log)
+            # TODO after ExtractFeature Line 240
+
             self.connections[tuple_key] = connection4tuple
 
         # 2. load conn, if not exist, insert
@@ -97,9 +121,13 @@ class FeatureExtractor:
             src_port = conn_log['id.orig_p']
             dst_port = conn_log['id.resp_p']
             tuple_key = (src_ip, dst_ip, src_port, dst_port)
-            if tuple_key not in self.connections:
+            connection4tuple = None
+            if tuple_key in self.connections:
+                connection4tuple = self.connections[tuple_key]
+            else:
                 connection4tuple = Connection4tuple(tuple_key)
-                connection4tuple.add_not_ssl_flow(conn_log)
+            connection4tuple.add_not_ssl_flow(conn_log)
+            self.connections[tuple_key] = connection4tuple
 
         # 3. calculate statictical feature
         # for connection4tupl_key in self.connections:
