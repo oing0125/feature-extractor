@@ -47,7 +47,7 @@ class FeatureExtractor:
                                 fw.write(line.replace('#fields\x09', ''))
                             continue
                         if line.startswith(end_line_start_with):
-                            break;
+                            break
                         fw.write(line)
 
     def extract_features(self):
@@ -55,7 +55,7 @@ class FeatureExtractor:
 
         # 0. load x509, create x509_dict
         for idx, x509_log in self.x509_log_datas.iterrows():
-            x509_uid = x509_log['uid']
+            x509_uid = x509_log['id']
             if x509_uid not in self.x509_dict:
                 self.x509_dict[x509_uid] = x509_log
 
@@ -90,7 +90,7 @@ class FeatureExtractor:
             server_name = ssl_log['server_name']
             cert_chain = ssl_log['cert_chain_fuids']
             if cert_chain == '-':
-                print('[Warning]no cert chain.... what can u do?')
+                # print('[Warning]no cert chain.... what can u do?')
                 continue
             cert_keys = cert_chain.split(',') if ',' in str(cert_chain) else [cert_chain]
             uid_x509 = cert_keys[0]
@@ -98,15 +98,25 @@ class FeatureExtractor:
             if uid_x509 in self.x509_dict:
                 cert_serial = x509_log['certificate.serial']
                 certificate_feature = None
-                if cert_serial in self.certificate_dict[cert_serial]:
+                if cert_serial in self.certificate_dict:
                     certificate_feature = self.certificate_dict[cert_serial]
                 else:
                     certificate_feature = CertificationFeatures()
                 certificate_feature.add_server_name(server_name)
                 certificate_feature.add_x509_info(x509_log)
 
-            self.connections[uid].add_ssl_log(ssl_log, x509_log)
-            # TODO after ExtractFeature Line 240
+            connection4tuple.add_ssl_log(ssl_log, x509_log)
+            list_of_x509_uid = ssl_log['cert_chain_fuids'].split(',')
+            x509_log_list = []
+            is_found = True
+            for x509_uid in list_of_x509_uid:
+                if x509_uid in self.x509_dict:
+                    x509_log_list.append(self.x509_dict[x509_uid])
+                else:
+                    is_found = False
+            connection4tuple.check_certificate_path(x509_log_list, is_found)
+            if len(x509_log_list) > 0 :
+                connection4tuple.check_root_certificate(x509_log_list)
 
             self.connections[tuple_key] = connection4tuple
 
