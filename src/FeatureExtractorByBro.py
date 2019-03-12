@@ -51,8 +51,6 @@ class FeatureExtractor:
                         fw.write(line)
 
     def extract_features(self):
-        # TODO
-
         # 0. load x509, create x509_dict
         for idx, x509_log in self.x509_log_datas.iterrows():
             x509_uid = x509_log['id']
@@ -85,7 +83,6 @@ class FeatureExtractor:
                 connection4tuple = Connection4tuple(tuple_key)
             connection4tuple.add_ssl_flow(conn_log)
 
-            # TODO
             # write ssl information
             server_name = ssl_log['server_name']
             cert_chain = ssl_log['cert_chain_fuids']
