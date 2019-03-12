@@ -69,12 +69,12 @@ class FeatureExtractor:
             self.conn_dict[uid] = conn_log
             src_ip = conn_log['id.orig_h']
             dst_ip = conn_log['id.resp_h']
-            src_port = conn_log['id.orig_p']
             dst_port = conn_log['id.resp_p']
-            if type(src_ip) is not str or type(dst_ip) is not str or type(src_port) is not np.int64 or type(dst_port) is not np.int64:
+            proto = conn_log['proto']
+            if type(src_ip) is not str or type(dst_ip) is not str or type(proto) is not np.int64 or type(dst_port) is not np.int64:
                 print('[warning] keys of tuples has some strange value. skip the data')
                 continue
-            tuple_key = (src_ip, dst_ip, src_port, dst_port)
+            tuple_key = (src_ip, dst_ip, dst_port, proto)
 
 
             # 3) save in connections
@@ -128,9 +128,9 @@ class FeatureExtractor:
             self.conn_dict[uid] = conn_log
             src_ip = conn_log['id.orig_h']
             dst_ip = conn_log['id.resp_h']
-            src_port = conn_log['id.orig_p']
             dst_port = conn_log['id.resp_p']
-            tuple_key = (src_ip, dst_ip, src_port, dst_port)
+            proto = conn_log['proto']
+            tuple_key = (src_ip, dst_ip, dst_port, proto)
             connection4tuple = None
             if tuple_key in self.connections:
                 connection4tuple = self.connections[tuple_key]
