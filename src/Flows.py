@@ -43,6 +43,8 @@ class Flows:
 
         # x509 information
         self.is_not_valid_cert_period = 0
+        self.is_sni_in_san_dns = 0
+        self.is_cn_in_san_dns = 0
         self.pub_key_length_list = []
         self.cert_validatity_period_list = []
         self.age_of_cert_list = []
@@ -106,6 +108,12 @@ class Flows:
         not_valid_before = x509_log['certificate.not_valid_before']
         not_valid_after = x509_log['certificate.not_valid_after']
         cert_serial = x509_log['certificate.serial']
+        san_dns = x509_log['san.dns']
+        san_dns_list = san_dns.split(',')
+        subject_str = x509_log['certificate.subject']
+        subject_list = subject_str.split(',')
+        cn_list = list(map(lambda x :x.split('=')[1], filter(lambda x: x.split('=')[0] == 'CN', subject_list)))
+
         self.pub_key_length_list.append(pub_key_length)
         self.cert_validatity_period_list.append(not_valid_after - not_valid_before)
         if not (not_valid_before <= ts <= not_valid_after):
@@ -114,8 +122,10 @@ class Flows:
         self.age_of_cert_list.append(age_of_cert)
         if cert_serial not in self.cert_serial_list:
             self.cert_serial_list.append(cert_serial)
-        # TODO 25. mean of number of domains in cert san dns
-
+        self.is_sni_in_san_dns = 1 if ssl_server_name in san_dns_list else self.is_sni_in_san_dns
+        for cn in cn_list:
+            if cn in san_dns_list:
+                self.is_cn_in_san_dns = 1
 
     def get_key(self):
         return self.key
@@ -273,6 +283,45 @@ class Flows:
     """
         x509_log
     """
+    # 22. mean of public_key_length
+    def mean_of_pub_key_length(self):
+        if len(self.pub_key_length_list) == 0:
+            return -1
+        return statistics.mean(self.pub_key_length_list)
+
+    # 23. mean of cert validatity period
+    def mean_of_cert_validatity_period(self):
+        if len(self.cert_validatity_period_list) == 0:
+            return -1
+        return statistics.mean(self.cert_validatity_period_list)
+
+    # 24. stdev of cert validatity period
+    def stdev_of_cert_validatity_period(self):
+        if len(self.cert_validatity_period_list) > 2:
+            return statistics.stdev(self.cert_validatity_period_list)
+        return -1
+
+    # 25. validity of certificate period
+    def validity_of_cert_period(self):
+        return self.is_not_valid_cert_period
+
+    # 26. mean of age of cert
+    def mean_of_age_of_cert(self):
+        if len(self.age_of_cert_list) == 0:
+            return -1
+        return statistics.mean(self.age_of_cert_list)
+
+    # 27. amount of cert
+    def number_of_cert(self):
+        return len(self.cert_serial_list)
+
+    # 28. sni in san dns
+    def sni_in_san_dns(self):
+        return self.is_sni_in_san_dns
+
+    # 29. cn in san dns
+    def cn_in_san_dns(self):
+        return self.is_cn_in_san_dns
 
 if __name__ == '__main__':
     for i in range(2,3):

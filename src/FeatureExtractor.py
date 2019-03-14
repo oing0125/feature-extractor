@@ -68,40 +68,44 @@ class FeatureExtractor:
         self.create_flows()
 
     def parsing_conn_file(self):
-        self.conn_log_datas = pd.read_csv(self.path + '/conn.csv', delimiter=self.delimiter_csv)
-        for idx, conn_log in self.conn_log_datas.iterrows():
-            uid = conn_log['uid']
-            if uid in self.conn_logs:
-                print(['[WARNING] there is duplicated uid key in conn log'])
-            else:
-                self.conn_logs[uid] = conn_log
+        if os.path.exists(self.path + '/conn.csv'):
+            self.conn_log_datas = pd.read_csv(self.path + '/conn.csv', delimiter=self.delimiter_csv)
+            for idx, conn_log in self.conn_log_datas.iterrows():
+                uid = conn_log['uid']
+                if uid in self.conn_logs:
+                    print('[WARNING] there is duplicated uid key in conn log')
+                else:
+                    self.conn_logs[uid] = conn_log
 
     def parsing_ssl_file(self):
-        self.ssl_log_datas = pd.read_csv(self.path + '/ssl.csv', delimiter=self.delimiter_csv)
-        for idx, ssl_log in self.ssl_log_datas.iterrows():
-            uid = ssl_log['uid']
-            if uid in self.ssl_logs:
-                self.ssl_logs[uid].append(ssl_log)
-            else:
-                self.ssl_logs[uid] = [ssl_log]
+        if os.path.exists(self.path + '/ssl.csv'):
+            self.ssl_log_datas = pd.read_csv(self.path + '/ssl.csv', delimiter=self.delimiter_csv)
+            for idx, ssl_log in self.ssl_log_datas.iterrows():
+                uid = ssl_log['uid']
+                if uid in self.ssl_logs:
+                    print('[WARNING] there is duplicated uid in ssl log')
+                else:
+                    self.ssl_logs[uid] = ssl_log
 
     def parsing_x509_file(self):
-        self.x509_log_datas = pd.read_csv(self.path + '/x509.csv', delimiter=self.delimiter_csv)
-        for idx, x509_log in self.x509_log_datas.iterrows():
-            id = x509_log['id']
-            if id in self.x509_logs:
-                self.x509_logs[id].append(x509_log)
-            else:
-                self.x509_logs[id] = [x509_log]
+        if os.path.exists(self.path + '/x509.csv'):
+            self.x509_log_datas = pd.read_csv(self.path + '/x509.csv', delimiter=self.delimiter_csv)
+            for idx, x509_log in self.x509_log_datas.iterrows():
+                id = x509_log['id']
+                if id in self.x509_logs:
+                    print('[WARNING] there is duplicated id in x509 log')
+                else:
+                    self.x509_logs[id] = x509_log
 
     def parsing_dns_file(self):
-        self.dns_log_datas = pd.read_csv(self.path + '/dns.csv', delimiter=self.delimiter_csv)
-        for idx, dns_log in self.dns_log_datas.iterrows():
-            uid = dns_log['uid']
-            if uid in self.dns_logs:
-                self.dns_logs[uid].append(dns_log)
-            else:
-                self.dns_logs[uid] = [dns_log]
+        if os.path.exists(self.path + '/dns.csv'):
+            self.dns_log_datas = pd.read_csv(self.path + '/dns.csv', delimiter=self.delimiter_csv)
+            for idx, dns_log in self.dns_log_datas.iterrows():
+                uid = dns_log['uid']
+                if uid in self.dns_logs:
+                    self.dns_logs[uid].append(dns_log)
+                else:
+                    self.dns_logs[uid] = [dns_log]
 
     def create_flows(self):
         for uid in self.conn_logs:
@@ -116,13 +120,12 @@ class FeatureExtractor:
             self.flows[key].add_conn_log(conn_log)
 
             if uid in self.ssl_logs:
-                ssl_log_list = self.ssl_logs[uid]
-                for ssl_log in ssl_log_list:
-                    self.flows[key].add_ssl_log(ssl_log)
-                    cert_chain_fuids = ssl_log['cert_chain_fuids']
-                    if cert_chain_fuids != '-':
-                        for id in cert_chain_fuids.split(','):
-                            self.flows[key].add_x509_log(ssl_log, self.x509_logs[id])
+                ssl_log = self.ssl_logs[uid]
+                self.flows[key].add_ssl_log(ssl_log)
+                cert_chain_fuids = ssl_log['cert_chain_fuids']
+                if cert_chain_fuids != '-':
+                    id = cert_chain_fuids.split(',')[0]
+                    self.flows[key].add_x509_log(ssl_log, self.x509_logs[id])
 
         print('create flows')
 
@@ -130,6 +133,8 @@ class FeatureExtractor:
         features_list = []
         for key in self.flows:
             flow = self.flows[key]
+            if len(flow.ssl_log_list) == 0:
+                continue
             try:
                 flow_info = {
                     'src_ip': key[0]
@@ -157,6 +162,14 @@ class FeatureExtractor:
                     , 'code_of_sni_as_ip': flow.code_of_sni_as_ip()
                     , 'mean_of_certificate': flow.mean_of_certificate()
                     , 'ratio_of_not_verified_cert': flow.ratio_of_not_verified_cert()
+                    , 'mean_of_pub_key_length': flow.mean_of_pub_key_length()
+                    , 'mean_of_cert_validatity_period': flow.mean_of_cert_validatity_period()
+                    , 'stdev_of_cert_validatity_period': flow.stdev_of_cert_validatity_period()
+                    , 'validity_of_cert_period': flow.validity_of_cert_period()
+                    , 'mean_of_age_of_cert': flow.mean_of_age_of_cert()
+                    , 'number_of_cert': flow.number_of_cert()
+                    , 'sni_in_san_dns': flow.sni_in_san_dns()
+                    , 'cn_in_san_dns': flow.cn_in_san_dns()
                 }
                 features_list.append(flow_info)
             except Exception as e:
@@ -174,4 +187,5 @@ if __name__ == '__main__':
     datas = pd.DataFrame.from_records(list)
     print(datas.describe())
     print(datas.info())
+    datas.to_pickle('{}/datas.pkl'.format(path))
     print('================================ end ==============================')
