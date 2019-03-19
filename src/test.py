@@ -25,6 +25,11 @@ def parsing_all_benign():
             generated_datas = fe.get_features_list()
             benign_datas = benign_datas + generated_datas
 
+    fe = FeatureExtractor('/home/sdsra/Downloads/Dataset/benign-capture')
+    fe.prepare_data()
+    generated_datas = fe.get_features_list()
+    benign_datas = benign_datas + generated_datas
+
     tmpList = []
     for i in range(0, len(benign_datas)):
         tmpList.append(benign_datas[i])
@@ -71,20 +76,19 @@ def parsing_all_malware():
 
     ]
     malware_path = '/home/sdsra/Downloads/CTU-13-Dataset/malware'
-    malware_datas = pd.DataFrame()
     for malware_dir in malware_dir_list:
         trgt_malware_dir = malware_path + '/' + malware_dir['dir_name']
         if os.path.isdir(trgt_malware_dir):
             fe = FeatureExtractor(trgt_malware_dir)
             fe.prepare_data()
             list = fe.get_features_list()
-            pdMalwareDataList = pd.DataFrame.from_records(list)
-            pdMalwareDataList['is_malware'] = 0
-            if len(list) > 0:
+            for data in list:
                 for infected_ip in malware_dir['infected_ip']:
-                    pdMalwareDataList[pdMalwareDataList['src_ip'] == infected_ip] = 1
-            malware_datas = pd.concat([malware_datas, pdMalwareDataList], ignore_index=True)
-    malware_datas.to_pickle(malware_path + '/datas.pkl')
+                    if data['src_ip'] ==infected_ip:
+                        data['is_malware'] = 1
+                    else:
+                        data['is_malware'] = 0
+            pd.DataFrame.from_records(list).to_pickle(trgt_malware_dir + '/datas-by-mine.pkl')
 
 if __name__ == '__main__':
     print('=============================== start =============================')

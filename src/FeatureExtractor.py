@@ -127,7 +127,7 @@ class FeatureExtractor:
                     id = cert_chain_fuids.split(',')[0]
                     self.flows[key].add_x509_log(ssl_log, self.x509_logs[id])
 
-        print('create flows')
+        print('create flows-[{}]'.format(self.path))
 
     def get_features_list(self):
         features_list = []
